@@ -1,0 +1,37 @@
+services:
+  semantic-search:
+    build: .
+    container_name: semantic-search
+    restart: unless-stopped
+
+    # An uncapped container that OOMs can take the whole host with it.
+    # ~1.2 GB without the reranker, ~1.6 GB with it -- 2 GB is the floor.
+    mem_limit: 2g
+
+    environment:
+      VAULT: /vault
+      DATA: /data
+      W_VEC: "1.0"
+      W_BM: "0.4"
+      W_TITLE: "0.6"
+      RRF_K: "10"
+      TOPN: "50"
+      RERANK_ENABLED: "1"
+      RERANK_POOL: "10"
+      RERANK_SNIPPET_CHARS: "240"
+      REINDEX_SEC: "900"
+
+    volumes:
+      # The corpus is mounted READ-ONLY. This service only ever reads notes;
+      # it writes exclusively to its own index volume.
+      - ${CORPUS_PATH:-./corpus}:/vault:ro
+      - index-data:/data
+      # Drop the exported cross-encoder here to enable stage 4.
+      - ./reranker:/app/reranker:ro
+
+    ports:
+      # Bound to loopback on purpose: do not publish this to a public interface.
+      - "127.0.0.1:8089:8080"
+
+volumes:
+  index-data:

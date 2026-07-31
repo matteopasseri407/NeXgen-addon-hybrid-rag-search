@@ -1,0 +1,10 @@
+{
+  "costo": ["cost", "pricing"],
+  "costi": ["cost", "pricing"],
+  "ricerca": ["search", "retrieval"],
+  "modello": ["model"],
+  "modelli": ["model"],
+  "memoria": ["memory", "ram"],
+  "rete": ["network"],
+  "locale": ["local"]
+}

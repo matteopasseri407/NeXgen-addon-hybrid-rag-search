@@ -1,0 +1,22 @@
+[
+  {
+    "query": "how do I roll back the reranker without rebuilding the image",
+    "expect": "docs/rollback.md",
+    "_why": "concept query: the note never uses the word 'rollback' in its body"
+  },
+  {
+    "query": "rag_index.py",
+    "expect": "docs/indexing.md",
+    "_why": "exact filename: must win on the title/filename signal alone"
+  },
+  {
+    "query": "quanto costa tenere il container acceso",
+    "expect": "docs/footprint.md",
+    "_why": "Italian query against an English note: tests query expansion"
+  },
+  {
+    "query": "why did results get worse after adding a second stage",
+    "expect": ["docs/reranker.md", "docs/eval.md"],
+    "_why": "either note is a correct answer"
+  }
+]

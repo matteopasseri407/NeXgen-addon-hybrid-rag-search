@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+.env
+# exported cross-encoder weights: 118 MB, rebuild with export_reranker.py
+reranker/
+corpus/
