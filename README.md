@@ -1,8 +1,14 @@
-# Hybrid RAG search with a cross-encoder reranker
+# Hybrid RAG search with a cross-encoder reranker — optional add-on module for NeXgen Engine
 
 Retrieval for a Markdown knowledge base: vector search, BM25, and a title/filename signal fused with RRF, then re-scored by a quantized cross-encoder. CPU only, one container, no GPU, no vector database.
 
 This is the search layer behind a set of AI coding agents that query a private knowledge base through MCP. It has been running in production on a 4-core ARM VM since June 2026. The code here is that code, not a reconstruction.
+
+## Optional add-on for NeXgen Engine
+
+This is the retrieval layer of [NeXgen Engine](https://github.com/matteopasseri407/NeXgen-Engine): the thing its agents query when they search a Markdown knowledge base. It is optional, and strongly recommended once that base grows past what plain keyword matching can find.
+
+The engine runs without it: retrieval falls back to lexical search, nothing breaks. Install this container and the same corpus becomes searchable by meaning, with the fusion and the reranker described below, and no change on the engine side.
 
 ## Measured, on the production corpus
 
@@ -109,6 +115,8 @@ Reports hits@1, hits@5, MRR and latency. `eval/queries.example.json` shows the f
 - The comments and log lines in `src/` are in Italian. This is the original production code, published as it runs.
 
 ## Sintesi in italiano
+
+E' un modulo **opzionale e fortemente consigliato** del [NeXgen Engine](https://github.com/matteopasseri407/NeXgen-Engine): e' il layer di retrieval che gli agenti del motore interrogano via MCP. Il motore funziona anche senza (ricerca lessicale); con il modulo, la stessa base di conoscenza diventa interrogabile per significato.
 
 Layer di retrieval ibrido per una base di conoscenza in Markdown: ricerca vettoriale, BM25 e un segnale su titolo/nome-file, fusi con RRF e poi riordinati da un cross-encoder quantizzato int8. Solo CPU, un container, nessun vector database. In produzione su una VM ARM a 4 core da giugno 2026.
 
