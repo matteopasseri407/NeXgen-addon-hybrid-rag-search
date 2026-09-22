@@ -137,7 +137,11 @@ def _fts_query(q):
     toks = [t for t in _FTS_CLEAN.split(q) if len(t) >= 2]
     content = [t for t in toks if t.lower() not in STOPWORDS]
     use = content if content else toks
-    return " OR ".join(use) if use else None
+    # Termini quotati: senza quote FTS5 interpreta ":", "-", "*" e i nomi
+    # di colonna dentro la query e lo stadio BM25 viene skippato in
+    # silenzio per l'intera query (osservato nei log di produzione).
+    quoted = ['"%s"' % t.replace('"', '') for t in use]
+    return " OR ".join(quoted) if quoted else None
 
 def search(q, k=5):
     with _lock:

@@ -6,5 +6,13 @@
   "modelli": ["model"],
   "memoria": ["memory", "ram"],
   "rete": ["network"],
-  "locale": ["local"]
+  "locale": ["local"],
+  "scarichi": ["battery", "drain", "suspend"],
+  "scarico": ["battery", "drain"],
+  "zaino": ["laptop"],
+  "chiuso": ["suspend", "hibernate", "standby"],
+  "chiusa": ["suspend"],
+  "orchestrazione": ["orchestration"],
+  "protocollo": ["protocol"],
+  "agenti": ["agent"]
 }
