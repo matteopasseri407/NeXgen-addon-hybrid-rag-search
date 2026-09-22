@@ -2,7 +2,7 @@
 
 Retrieval for a Markdown knowledge base: vector search, BM25, and a title/filename signal fused with RRF, then re-scored by a quantized cross-encoder. CPU only, one container, no GPU, no vector database.
 
-This is the search layer behind a set of AI coding agents that query a private knowledge base through MCP. It has been running in production on a 4-core ARM VM since June 2026. The code here is that code, not a reconstruction.
+This is the search layer behind a set of AI coding agents that query a private knowledge base through MCP. It has been running in production on an ARM VM since June 2026 (4 cores until August 2026, 2 cores since). The code here is that code, not a reconstruction.
 
 ## Optional add-on for NeXgen Engine
 
@@ -12,13 +12,15 @@ The engine runs without it: retrieval falls back to lexical search, nothing brea
 
 ## Measured, on the production corpus
 
-1,284 chunks across 202 files, scored against a 20-query gold set:
+2,564 chunks across 373 files, scored against a 19-query gold set (September 2026, production VM with 2 ARM cores — same code, same corpus, reranker toggled by `RERANK_ENABLED`):
 
-| Configuration | hits@1 | hits@5 | MRR | latency/query |
+| Configuration | hits@1 | hits@5 | MRR | latency/query (p50) |
 | --- | --- | --- | --- | --- |
-| Fusion only (RRF + title boost) | 12/20 | 15/20 | 0.662 | sub-ms |
-| **+ cross-encoder reranker** | **13/20** | **16/20** | **0.702** | **150–250 ms** |
+| Fusion only (RRF + title boost) | 13/19 | 17/19 | 0.781 | ~6 ms |
+| **+ cross-encoder reranker** | **15/19** | **19/19** | **0.879** | **~460 ms** |
 | Reranker fed bare snippets | — | **12/20** | — | ~900 ms |
+
+(June 2026 baseline, 1,284 chunks / 202 files / 4 cores / 20 queries: fusion 12/20 hits@1, 15/20 hits@5, MRR 0.662; +reranker 13/20, 16/20, 0.702 at 150–250 ms. The September rerun also includes two production fixes below: FTS terms are now double-quoted, and the synonym list grew from real misses.)
 
 The reranker is the entire latency budget: the vector multiply, the SQL, and the fusion are all sub-millisecond.
 
@@ -62,7 +64,7 @@ Four stages. The first three always run; the fourth re-scores their winners.
 
 ## Latency, on the hardware it actually runs on
 
-Two findings, both measured on the 4-core ARM VM rather than estimated:
+Two findings, both measured on the production ARM VM rather than estimated (pool finding on 4 cores; latency re-measured at ~460 ms p50 after the August 2026 resize to 2 cores halved the ONNX thread count):
 
 **Pool size and sequence length dominate.** Everything around the reranker — the vector multiply, the SQL, the fusion — is sub-millisecond. A pool of 20 candidates at 480-char snippets cost ~860–900 ms per query, too slow to sit in front of an interactive agent. Narrowing to **10 candidates at 240 chars** brought it to ~150–250 ms with *equal or better* quality: RRF already places the right candidates in the first ten, so the wider net bought latency and nothing else.
 
@@ -74,7 +76,7 @@ The retrieval path is the dependency of an agent's answer, so it degrades rather
 
 - Reranker fails to load at boot (missing file, corrupt export, OOM) → log it, serve fusion-only, report `"reranker": false` on `/health`. Never a failed boot.
 - Reranker throws on a single query (degenerate input, transient memory pressure) → that query falls back to fusion order. The exception does not escape `search()`.
-- BM25 query fails to parse → the lexical signal drops out for that query and vector plus title-boost still answer.
+- BM25 query fails to parse → the lexical signal drops out for that query and vector plus title-boost still answer. Query terms are double-quoted before being sent to FTS5, so `:`, `-`, `*` and column-name-looking tokens can no longer kill the stage (this exact failure was observed in production logs and fixed September 2026).
 - `RERANK_ENABLED=0` produces the same behavior as a failed load, so the fallback path is one env var away and gets exercised in normal operation instead of only during an incident.
 - The corpus is mounted **read-only**. The service writes to its index volume and nowhere else.
 - The container declares a memory limit. An uncapped container that OOMs can take the host down with it.
